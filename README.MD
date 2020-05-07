@@ -1,8 +1,9 @@
 # Roblox Forums Backend
 Used by the Roblox Forums project on forums.beak.dev
-You can [check out the official extension here](https://chrome.google.com/webstore/detail/roblox-forums/ipnjgolbdmpkjlcmncljpfkehflnbkkd)
 
-Please report any security vulnerabilities to forums-project@beak.dev
+- You can [check out the official extension here](https://chrome.google.com/webstore/detail/roblox-forums/ipnjgolbdmpkjlcmncljpfkehflnbkkd)
+
+Note: I currently consider this project to be in an early beta. Please report any security vulnerabilities to forums-project@beak.dev
 
 # Setup
 1. Install MySQL and Node >= v12
