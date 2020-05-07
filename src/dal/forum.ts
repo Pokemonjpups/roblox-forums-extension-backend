@@ -53,6 +53,7 @@ export const allPostsByCategory: { subCategoryId: number; posts: any[] }[] = [];
                     }
                 }
                 // posts = _newPosts.slice(0,500);
+                posts = _newPosts;
 
                 // console.log('count all replies');
                 for (const post of posts) {
