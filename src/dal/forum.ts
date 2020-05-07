@@ -364,4 +364,33 @@ export class Forum extends dal {
         let all = await Promise.all(allQueries);
         return all;
     }
+
+    public async contentDeletePost(id: number): Promise<void> {
+        let data = await this.knex('forum_posts').select('parent_thread').where({
+            'id': id,
+        });
+        if (data[0].parent_thread === 0) {
+            // delete title from replies
+            await this.knex('forum_posts').update({
+                'post_title': '[ Content Deleted ]',
+            }).where({
+                'parent_thread': id,
+            });
+            // delete thread itself
+            await this.knex('forum_posts').update({
+                'post_title': '[ Content Deleted ]',
+                'post_body': '[ Content Deleted ]',
+            }).where({
+                'id': id,
+            });
+        }else{
+            // Just delete the post itself
+            await this.knex('forum_posts').update({
+                'post_body': '[ Content Deleted ]',
+            }).where({
+                'id': id,
+            });
+        }
+        // Ok
+    }
 }

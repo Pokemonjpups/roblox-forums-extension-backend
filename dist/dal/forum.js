@@ -358,6 +358,37 @@ class Forum extends _index_1.default {
             return all;
         });
     }
+    contentDeletePost(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let data = yield this.knex('forum_posts').select('parent_thread').where({
+                'id': id,
+            });
+            if (data[0].parent_thread === 0) {
+                // delete title from replies
+                yield this.knex('forum_posts').update({
+                    'post_title': '[ Content Deleted ]',
+                }).where({
+                    'parent_thread': id,
+                });
+                // delete thread itself
+                yield this.knex('forum_posts').update({
+                    'post_title': '[ Content Deleted ]',
+                    'post_body': '[ Content Deleted ]',
+                }).where({
+                    'id': id,
+                });
+            }
+            else {
+                // Just delete the post itself
+                yield this.knex('forum_posts').update({
+                    'post_body': '[ Content Deleted ]',
+                }).where({
+                    'id': id,
+                });
+            }
+            // Ok
+        });
+    }
 }
 exports.Forum = Forum;
 //# sourceMappingURL=forum.js.map

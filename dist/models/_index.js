@@ -6,4 +6,6 @@ const Auth = require("./auth");
 exports.Auth = Auth;
 const Posts = require("./Posts");
 exports.Posts = Posts;
+const Moderation = require("./Moderation");
+exports.Moderation = Moderation;
 //# sourceMappingURL=_index.js.map
