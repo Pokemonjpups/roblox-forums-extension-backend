@@ -1,0 +1,46 @@
+{
+    "name": "forums-beak-dev",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "node ./util/build.js",
+        "start:dev": "cross-env ENV_FILE=development nodemon -r ./env --ignore / --exec ts-node-dev src/index.ts --inspect",
+        "start": "cross-env ENV_FILE=production node -r ./env -r module-alias/register ./dist/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/express": "^4.17.6",
+        "nodemon": "^2.0.3",
+        "ts-node": "^8.10.1",
+        "typescript": "^3.8.3"
+    },
+    "dependencies": {
+        "@tsed/ajv": "5.36.0",
+        "@tsed/common": "5.36.0",
+        "@tsed/core": "5.36.0",
+        "@tsed/swagger": "5.36.0",
+        "@tsed/testing": "5.36.0",
+        "@types/jsonwebtoken": "^8.3.9",
+        "@types/lodash": "^4.14.150",
+        "@types/swagger-schema-official": "^2.0.21",
+        "body-parser": "^1.19.0",
+        "compression": "^1.7.4",
+        "cookie-parser": "^1.4.5",
+        "cross-env": "^7.0.2",
+        "dotenv": "^8.2.0",
+        "express": "^4.17.1",
+        "jsonwebtoken": "^8.5.1",
+        "knex": "^0.21.1",
+        "lodash": "^4.17.15",
+        "method-override": "^3.0.0",
+        "module-alias": "^2.2.2",
+        "moment": "^2.25.3",
+        "mysql": "^2.18.1",
+        "ts-httpexceptions": "^4.1.0",
+        "ts-node-dev": "^1.0.0-pre.44"
+    }
+}
