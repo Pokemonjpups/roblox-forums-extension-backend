@@ -51,7 +51,7 @@ exports.allPostsByCategory = [];
                         _newPosts.push(post);
                     }
                 }
-                posts = _newPosts.slice(0, 500);
+                // posts = _newPosts.slice(0,500);
                 // console.log('count all replies');
                 for (const post of posts) {
                     let _grabCount = data.knex('forum_posts').count('id as total');
