@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const _index_1 = require("./_index");
 const model = require("../models/_index");
@@ -22,12 +13,12 @@ exports.allPostsByCategory = [];
     const sleep = require('util').promisify(setTimeout);
     const data = new _index_1.default();
     let allData = new model.Categories.ForumCategories();
-    const getPostsAndUpdateInternalRecords = () => __awaiter(void 0, void 0, void 0, function* () {
+    const getPostsAndUpdateInternalRecords = async () => {
         // console.log('grabbing posts for all categories...');
-        const setupCats = (cat) => __awaiter(void 0, void 0, void 0, function* () {
+        const setupCats = async (cat) => {
             let allPostsArr = [];
             let lastLenTest = 0;
-            const addNewItemsToArray = () => __awaiter(void 0, void 0, void 0, function* () {
+            const addNewItemsToArray = async () => {
                 // console.log('grabbing for',cat.name);
                 // grab posts
                 // console.log('get all threads');
@@ -37,7 +28,7 @@ exports.allPostsByCategory = [];
                 if (allPostsArr.length > 0) {
                     _posts = _posts.andWhere('id', '<', allPostsArr[allPostsArr.length - 1]['id']);
                 }
-                let posts = yield _posts;
+                let posts = await _posts;
                 lastLenTest = posts.length;
                 // console.log('total posts got',posts.length,'for cat',cat.id);
                 // console.log('order posts');
@@ -70,21 +61,21 @@ exports.allPostsByCategory = [];
                     else {
                         _grabCount = _grabCount.orWhere('parent_thread', '=', post.id);
                     }
-                    let grabCountResults = yield _grabCount;
+                    let grabCountResults = await _grabCount;
                     // I don't think mysql fiddles with the order (?)
                     post.reply_count = grabCountResults[0]['total'];
                 }
                 posts.forEach(p => {
                     allPostsArr.push(p);
                 });
-            });
+            };
             while (allPostsArr.length < 1000) {
                 /*
                 if (allPostsArr.length > 0) {
                     console.log(allPostsArr.length,'posts. trying again with offset',allPostsArr[allPostsArr.length-1]['id']);
                 }
                 */
-                yield addNewItemsToArray();
+                await addNewItemsToArray();
                 if (lastLenTest === 0) {
                     // :(
                     break;
@@ -108,7 +99,7 @@ exports.allPostsByCategory = [];
                     posts: allPostsArr,
                 });
             }
-        });
+        };
         let _allPromises = [];
         for (const cat of allData.subCategories) {
             if (!cat.hidden) {
@@ -116,118 +107,110 @@ exports.allPostsByCategory = [];
             }
         }
         ;
-        yield Promise.all(_allPromises);
-    });
-    const _getPostsSetup = () => __awaiter(void 0, void 0, void 0, function* () {
+        await Promise.all(_allPromises);
+    };
+    const _getPostsSetup = async () => {
         while (true) {
             // console.log('all threads count',allPostsByCategory.length);
             try {
-                yield getPostsAndUpdateInternalRecords();
-                yield sleep(5000);
+                await getPostsAndUpdateInternalRecords();
+                await sleep(5000);
             }
             catch (err) {
                 console.error(err);
             }
         }
-    });
+    };
     _getPostsSetup();
 })();
 class Forum extends _index_1.default {
     constructor() {
         super();
     }
-    getPosts(limit = 100, offset) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const cols = [
-                'id',
-                'created_at',
-                'post_title',
-                'post_body',
-                'author_id',
-                'author_joindate',
-                'author_postcount',
-                'post_group',
-                'post_category',
-                'is_moderator',
-                'is_top_100_poster',
-                'is_top_25_poster',
-                'is_top_50_poster',
-                'is_thread',
-                'parent_thread',
-            ];
-            let posts = yield this.knex('forum_posts').select(cols).limit(limit).orderBy('id', 'desc').offset(offset);
-            return posts;
-        });
+    async getPosts(limit = 100, offset) {
+        const cols = [
+            'id',
+            'created_at',
+            'post_title',
+            'post_body',
+            'author_id',
+            'author_joindate',
+            'author_postcount',
+            'post_group',
+            'post_category',
+            'is_moderator',
+            'is_top_100_poster',
+            'is_top_25_poster',
+            'is_top_50_poster',
+            'is_thread',
+            'parent_thread',
+        ];
+        let posts = await this.knex('forum_posts').select(cols).limit(limit).orderBy('id', 'desc').offset(offset);
+        return posts;
     }
-    getPostsByCategory(categoryId, limit = 100, offset = 0) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (offset >= 400) {
-                return [];
+    async getPostsByCategory(categoryId, limit = 100, offset = 0) {
+        if (offset >= 400) {
+            return [];
+        }
+        // console.time('grab posts by cat');
+        for (const item of exports.allPostsByCategory) {
+            if (item.subCategoryId === categoryId) {
+                return item.posts.slice(offset, limit + offset);
             }
-            // console.time('grab posts by cat');
-            for (const item of exports.allPostsByCategory) {
-                if (item.subCategoryId === categoryId) {
-                    return item.posts.slice(offset, limit + offset);
-                }
-            }
-            throw new Error('Query is pending or invalid categoryId');
-        });
+        }
+        throw new Error('Query is pending or invalid categoryId');
     }
-    getThreadByIdWithReplies(threadId, limit = 100, offset = 0) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let fullData = [];
-            if (offset !== 0) {
-                limit = limit - 1;
-            }
-            let remainingPosts = [];
-            if (limit !== 0) {
-                remainingPosts = yield this.knex('forum_posts').select('*').where({
-                    'parent_thread': threadId,
-                }).limit(limit).offset(offset);
-            }
-            if (offset === 0) {
-                let threadInfo = yield this.knex('forum_posts').select('*').where({
-                    'id': threadId,
-                });
-                if (threadInfo[0]) {
-                    remainingPosts.unshift(threadInfo[0]);
-                }
-            }
-            let multiGetPostCount = [];
-            let _idsAlreadyAwaiting = [];
-            remainingPosts.forEach(p => {
-                if (_idsAlreadyAwaiting.includes(p.author_id)) {
-                    return;
-                }
-                _idsAlreadyAwaiting.push(p.author_id);
-                const getUserPosts = (id) => __awaiter(this, void 0, void 0, function* () {
-                    let val = yield this.getUserPostCount(id);
-                    return {
-                        id: id,
-                        total: val,
-                    };
-                });
-                multiGetPostCount.push(getUserPosts(p.author_id));
+    async getThreadByIdWithReplies(threadId, limit = 100, offset = 0) {
+        let fullData = [];
+        if (offset !== 0) {
+            limit = limit - 1;
+        }
+        let remainingPosts = [];
+        if (limit !== 0) {
+            remainingPosts = await this.knex('forum_posts').select('*').where({
+                'parent_thread': threadId,
+            }).limit(limit).offset(offset);
+        }
+        if (offset === 0) {
+            let threadInfo = await this.knex('forum_posts').select('*').where({
+                'id': threadId,
             });
-            let postCounts = yield Promise.all(multiGetPostCount);
-            remainingPosts.forEach(p => {
-                for (const item of postCounts) {
-                    if (item.id === p.author_id) {
-                        p.author_postcount = item.total;
-                    }
-                }
-                fullData.push(p);
-            });
-            return fullData;
+            if (threadInfo[0]) {
+                remainingPosts.unshift(threadInfo[0]);
+            }
+        }
+        let multiGetPostCount = [];
+        let _idsAlreadyAwaiting = [];
+        remainingPosts.forEach(p => {
+            if (_idsAlreadyAwaiting.includes(p.author_id)) {
+                return;
+            }
+            _idsAlreadyAwaiting.push(p.author_id);
+            const getUserPosts = async (id) => {
+                let val = await this.getUserPostCount(id);
+                return {
+                    id: id,
+                    total: val,
+                };
+            };
+            multiGetPostCount.push(getUserPosts(p.author_id));
         });
+        let postCounts = await Promise.all(multiGetPostCount);
+        remainingPosts.forEach(p => {
+            for (const item of postCounts) {
+                if (item.id === p.author_id) {
+                    p.author_postcount = item.total;
+                }
+            }
+            fullData.push(p);
+        });
+        return fullData;
     }
-    getUserPostCount(userId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let posts = yield this.knex('forum_posts').count('id as total').where({
-                'author_id': userId,
-            });
-            return posts[0]['total'] || 0;
+    async getUserPostCount(userId) {
+        let posts = await this.knex('forum_posts').count('id as total').where({
+            'author_id': userId,
         });
+        return posts[0]['total'] || 0;
     }
     /**
      * Create a thread.
@@ -239,37 +222,35 @@ class Forum extends _index_1.default {
      * @returns The post id of the thread
      * @throws {Error} Cooldown - User is on cooldown
      */
-    createThread(title, body, authorUserId, group, category) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let postId;
-            yield this.knex.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                let latestPost = yield trx('forum_posts').select('created_at').where({
-                    'author_id': authorUserId,
-                }).forUpdate('forum_posts').limit(1).orderBy('id', 'desc');
-                if (latestPost[0]) {
-                    if (this.moment().isSameOrBefore(this.moment(latestPost[0].created_at * 1000).add(30, 'seconds'))) {
-                        throw new Error('Cooldown');
-                    }
+    async createThread(title, body, authorUserId, group, category) {
+        let postId;
+        await this.knex.transaction(async (trx) => {
+            let latestPost = await trx('forum_posts').select('created_at').where({
+                'author_id': authorUserId,
+            }).forUpdate('forum_posts').limit(1).orderBy('id', 'desc');
+            if (latestPost[0]) {
+                if (this.moment().isSameOrBefore(this.moment(latestPost[0].created_at * 1000).add(30, 'seconds'))) {
+                    throw new Error('Cooldown');
                 }
-                postId = yield trx('forum_posts').insert({
-                    'created_at': this.moment().unix(),
-                    'post_title': title,
-                    'post_body': body,
-                    'author_id': authorUserId,
-                    'author_joindate': 0,
-                    'author_postcount': 0,
-                    'post_group': group,
-                    'post_category': category,
-                    'is_moderator': 0,
-                    'is_top_100_poster': 0,
-                    'is_top_25_poster': 0,
-                    'is_top_50_poster': 0,
-                    'is_thread': 1,
-                    'parent_thread': 0,
-                });
-            }));
-            return postId[0];
+            }
+            postId = await trx('forum_posts').insert({
+                'created_at': this.moment().unix(),
+                'post_title': title,
+                'post_body': body,
+                'author_id': authorUserId,
+                'author_joindate': 0,
+                'author_postcount': 0,
+                'post_group': group,
+                'post_category': category,
+                'is_moderator': 0,
+                'is_top_100_poster': 0,
+                'is_top_25_poster': 0,
+                'is_top_50_poster': 0,
+                'is_thread': 1,
+                'parent_thread': 0,
+            });
         });
+        return postId[0];
     }
     /**
      * Create a post (aka a "reply" to a threadId)
@@ -278,116 +259,108 @@ class Forum extends _index_1.default {
      * @param authorUserId
      * @returns The ID of the post
      */
-    createPost(postId, body, authorUserId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let returnPostId;
-            let totalReplyCountForThread;
-            yield this.knex.transaction((trx) => __awaiter(this, void 0, void 0, function* () {
-                let latestPost = yield trx('forum_posts').select('created_at').where({
-                    'author_id': authorUserId,
-                }).forUpdate('forum_posts').limit(1).orderBy('id', 'desc');
-                if (latestPost[0]) {
-                    if (this.moment().isSameOrBefore(this.moment(latestPost[0].created_at * 1000).add(30, 'seconds'))) {
-                        throw new Error('Cooldown');
-                    }
+    async createPost(postId, body, authorUserId) {
+        let returnPostId;
+        let totalReplyCountForThread;
+        await this.knex.transaction(async (trx) => {
+            let latestPost = await trx('forum_posts').select('created_at').where({
+                'author_id': authorUserId,
+            }).forUpdate('forum_posts').limit(1).orderBy('id', 'desc');
+            if (latestPost[0]) {
+                if (this.moment().isSameOrBefore(this.moment(latestPost[0].created_at * 1000).add(30, 'seconds'))) {
+                    throw new Error('Cooldown');
                 }
-                let postToReplyTo = yield trx('forum_posts').select('is_thread', 'parent_thread', 'post_title', 'post_group', 'post_category', 'created_at').where({
-                    'id': postId,
-                }).limit(1);
-                if (postToReplyTo[0]) {
-                    if (postToReplyTo[0]['is_thread'] === 0 || postToReplyTo[0]['parent_thread'] !== 0) {
-                        throw new Error('PostID is not a thread');
-                    }
-                    if (postToReplyTo[0]['created_at'] <= 1514764800) {
-                        throw new Error('LockedThread');
-                    }
-                    // OK
-                }
-                else {
-                    throw new Error('InvalidPostId');
-                }
-                returnPostId = yield trx('forum_posts').insert({
-                    'created_at': this.moment().unix(),
-                    'post_title': postToReplyTo[0]['post_title'],
-                    'post_body': body,
-                    'author_id': authorUserId,
-                    'author_joindate': 0,
-                    'author_postcount': 0,
-                    'post_group': postToReplyTo[0]['post_group'],
-                    'post_category': postToReplyTo[0]['post_category'],
-                    'is_moderator': 0,
-                    'is_top_100_poster': 0,
-                    'is_top_25_poster': 0,
-                    'is_top_50_poster': 0,
-                    'is_thread': 0,
-                    'parent_thread': postId,
-                });
-                let totalReplyCount = yield trx('forum_posts').count('id as total').where({
-                    'parent_thread': postId,
-                });
-                totalReplyCountForThread = totalReplyCount[0]['total'] + 1;
-            }));
-            return {
-                postId: returnPostId[0],
-                replyCount: totalReplyCountForThread,
-                expectedPage: Math.ceil(totalReplyCountForThread / 25),
-            };
-        });
-    }
-    countPostsForSubCategory(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let posts = yield this.knex('forum_posts').count('id as total').where({
-                'post_category': id,
-            });
-            let threads = yield this.knex('forum_posts').count('id as total').where('parent_thread', '!=', 0).andWhere({
-                'post_category': id,
-            });
-            return {
-                posts: posts[0]['total'],
-                threads: threads[0]['total'],
-            };
-        });
-    }
-    multiGetLatestPostsForSubcategory(ids) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let allQueries = [];
-            for (const id of ids) {
-                allQueries.push(this.knex('forum_posts').select('*').orderBy('id', 'desc').where('post_category', '=', id).limit(1));
             }
-            let all = yield Promise.all(allQueries);
-            return all;
-        });
-    }
-    contentDeletePost(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let data = yield this.knex('forum_posts').select('parent_thread').where({
-                'id': id,
-            });
-            if (data[0].parent_thread === 0) {
-                // delete title from replies
-                yield this.knex('forum_posts').update({
-                    'post_title': '[ Content Deleted ]',
-                }).where({
-                    'parent_thread': id,
-                });
-                // delete thread itself
-                yield this.knex('forum_posts').update({
-                    'post_title': '[ Content Deleted ]',
-                    'post_body': '[ Content Deleted ]',
-                }).where({
-                    'id': id,
-                });
+            let postToReplyTo = await trx('forum_posts').select('is_thread', 'parent_thread', 'post_title', 'post_group', 'post_category', 'created_at').where({
+                'id': postId,
+            }).limit(1);
+            if (postToReplyTo[0]) {
+                if (postToReplyTo[0]['is_thread'] === 0 || postToReplyTo[0]['parent_thread'] !== 0) {
+                    throw new Error('PostID is not a thread');
+                }
+                if (postToReplyTo[0]['created_at'] <= 1514764800) {
+                    throw new Error('LockedThread');
+                }
+                // OK
             }
             else {
-                // Just delete the post itself
-                yield this.knex('forum_posts').update({
-                    'post_body': '[ Content Deleted ]',
-                }).where({
-                    'id': id,
-                });
+                throw new Error('InvalidPostId');
             }
-            // Ok
+            returnPostId = await trx('forum_posts').insert({
+                'created_at': this.moment().unix(),
+                'post_title': postToReplyTo[0]['post_title'],
+                'post_body': body,
+                'author_id': authorUserId,
+                'author_joindate': 0,
+                'author_postcount': 0,
+                'post_group': postToReplyTo[0]['post_group'],
+                'post_category': postToReplyTo[0]['post_category'],
+                'is_moderator': 0,
+                'is_top_100_poster': 0,
+                'is_top_25_poster': 0,
+                'is_top_50_poster': 0,
+                'is_thread': 0,
+                'parent_thread': postId,
+            });
+            let totalReplyCount = await trx('forum_posts').count('id as total').where({
+                'parent_thread': postId,
+            });
+            totalReplyCountForThread = totalReplyCount[0]['total'] + 1;
         });
+        return {
+            postId: returnPostId[0],
+            replyCount: totalReplyCountForThread,
+            expectedPage: Math.ceil(totalReplyCountForThread / 25),
+        };
+    }
+    async countPostsForSubCategory(id) {
+        let posts = await this.knex('forum_posts').count('id as total').where({
+            'post_category': id,
+        });
+        let threads = await this.knex('forum_posts').count('id as total').where('parent_thread', '!=', 0).andWhere({
+            'post_category': id,
+        });
+        return {
+            posts: posts[0]['total'],
+            threads: threads[0]['total'],
+        };
+    }
+    async multiGetLatestPostsForSubcategory(ids) {
+        let allQueries = [];
+        for (const id of ids) {
+            allQueries.push(this.knex('forum_posts').select('*').orderBy('id', 'desc').where('post_category', '=', id).limit(1));
+        }
+        let all = await Promise.all(allQueries);
+        return all;
+    }
+    async contentDeletePost(id) {
+        let data = await this.knex('forum_posts').select('parent_thread').where({
+            'id': id,
+        });
+        if (data[0].parent_thread === 0) {
+            // delete title from replies
+            await this.knex('forum_posts').update({
+                'post_title': '[ Content Deleted ]',
+            }).where({
+                'parent_thread': id,
+            });
+            // delete thread itself
+            await this.knex('forum_posts').update({
+                'post_title': '[ Content Deleted ]',
+                'post_body': '[ Content Deleted ]',
+            }).where({
+                'id': id,
+            });
+        }
+        else {
+            // Just delete the post itself
+            await this.knex('forum_posts').update({
+                'post_body': '[ Content Deleted ]',
+            }).where({
+                'id': id,
+            });
+        }
+        // Ok
     }
 }
 exports.Forum = Forum;

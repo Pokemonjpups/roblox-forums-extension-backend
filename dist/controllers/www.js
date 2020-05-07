@@ -24,6 +24,7 @@ let WWW = class WWW extends _index_1.default {
     }
     index(res) {
         res.setHeader('content-type', 'text/plain');
+        // todo: remove this and maybe make it configurable in config.json? I don't want my email attached to random self-hosted forum projects...
         res.send(`This is an endpoint used for the unofficial roblox forums browser extension by beak.\n\nTo report abusive content or to contact the operator of this service, please send an email to forums-project@beak.dev and allow up to 2 weeks for a response (if any). Unofficial Roblox Forums is not sponsored, endorsed, or in any way related to Roblox corperation.`).end();
     }
     stats(res) {

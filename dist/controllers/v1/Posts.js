@@ -11,15 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("@tsed/common");
 const swagger_1 = require("@tsed/swagger");
@@ -27,78 +18,68 @@ const _index_1 = require("./_index");
 const middleware = require("../../middleware/v1/_middleware");
 const model = require("../../models/_index");
 let Posts = class Posts extends _index_1.default {
-    getPosts(limit, offset) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.Forum.getPosts(limit, offset);
-        });
+    async getPosts(limit, offset) {
+        return this.Forum.getPosts(limit, offset);
     }
-    getPostsByCategoryId(categoryId, offset, limit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.Forum.getPostsByCategory(categoryId, limit, offset);
-        });
+    async getPostsByCategoryId(categoryId, offset, limit) {
+        return this.Forum.getPostsByCategory(categoryId, limit, offset);
     }
-    getPostById(postId, offset, limit) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.Forum.getThreadByIdWithReplies(postId, limit, offset);
-        });
+    async getPostById(postId, offset, limit) {
+        return this.Forum.getThreadByIdWithReplies(postId, limit, offset);
     }
-    createThread(userId, body) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let allCategories = new model.Categories.ForumCategories();
-            let cat;
-            for (const item of allCategories.subCategories) {
-                if (item.id === body.category && !item.hidden) {
-                    cat = item;
+    async createThread(userId, body) {
+        let allCategories = new model.Categories.ForumCategories();
+        let cat;
+        for (const item of allCategories.subCategories) {
+            if (item.id === body.category && !item.hidden) {
+                cat = item;
+            }
+        }
+        if (!cat) {
+            throw new this.BadRequest('InvalidCategoryId');
+        }
+        let group;
+        for (const item of allCategories.categories) {
+            if (item.subCategories.includes(body.category) && !item.hidden) {
+                group = item;
+            }
+        }
+        if (!group) {
+            throw new this.BadRequest('InvalidCategoryId');
+        }
+        // Category is OK, so create thread
+        let id;
+        try {
+            id = await this.Forum.createThread(body.title, body.body, userId, group.id, cat.id);
+        }
+        catch (err) {
+            if (err && err.message) {
+                if (err.message === 'Cooldown') {
+                    throw new this.BadRequest('Cooldown');
                 }
             }
-            if (!cat) {
-                throw new this.BadRequest('InvalidCategoryId');
-            }
-            let group;
-            for (const item of allCategories.categories) {
-                if (item.subCategories.includes(body.category) && !item.hidden) {
-                    group = item;
-                }
-            }
-            if (!group) {
-                throw new this.BadRequest('InvalidCategoryId');
-            }
-            // Category is OK, so create thread
-            let id;
-            try {
-                id = yield this.Forum.createThread(body.title, body.body, userId, group.id, cat.id);
-            }
-            catch (err) {
-                if (err && err.message) {
-                    if (err.message === 'Cooldown') {
-                        throw new this.BadRequest('Cooldown');
-                    }
-                }
-                throw err;
-            }
-            return {
-                id,
-            };
-        });
+            throw err;
+        }
+        return {
+            id,
+        };
     }
-    createPost(userId, postId, body) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Category is OK, so create thread
-            try {
-                return yield this.Forum.createPost(postId, body.body, userId);
-            }
-            catch (err) {
-                if (err && err.message) {
-                    if (err.message === 'Cooldown') {
-                        throw new this.BadRequest('Cooldown');
-                    }
-                    else if (err.message === 'LockedThread') {
-                        throw new this.Conflict('LockedThread');
-                    }
+    async createPost(userId, postId, body) {
+        // Category is OK, so create thread
+        try {
+            return await this.Forum.createPost(postId, body.body, userId);
+        }
+        catch (err) {
+            if (err && err.message) {
+                if (err.message === 'Cooldown') {
+                    throw new this.BadRequest('Cooldown');
                 }
-                throw err;
+                else if (err.message === 'LockedThread') {
+                    throw new this.Conflict('LockedThread');
+                }
             }
-        });
+            throw err;
+        }
     }
 };
 __decorate([
