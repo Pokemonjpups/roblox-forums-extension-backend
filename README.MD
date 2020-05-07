@@ -1,5 +1,6 @@
 # Roblox Forums Backend
 Used by the Roblox Forums project on forums.beak.dev
+You can [check out the official extension here](https://chrome.google.com/webstore/detail/roblox-forums/ipnjgolbdmpkjlcmncljpfkehflnbkkd)
 
 Please report any security vulnerabilities to forums-project@beak.dev
 
