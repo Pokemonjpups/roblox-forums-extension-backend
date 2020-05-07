@@ -37,7 +37,7 @@ const rootDir = __dirname;
 })
 export class Server extends ServerLoader {
     /**
-     * This method let you configure the express middleware required by your application to works.
+     * This method let you configure the express middleware required by your application to work.
      * @returns {Server}
      */
     public $beforeRoutesInit(): void | Promise<any> {

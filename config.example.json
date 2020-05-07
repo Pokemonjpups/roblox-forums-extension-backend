@@ -1,0 +1,13 @@
+{
+    "mysql": {
+        "host": "",
+        "user": "",
+        "password": "",
+        "database": "",
+        "charset": "utf8mb4_unicode_ci"
+    },
+    "jwt": {
+        "login": "",
+        "session": ""
+    }
+}

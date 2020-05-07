@@ -1,3 +1,4 @@
+// todo: move this to database or something
 export const ModeratorUserIds = [
     1,
     1335179568,

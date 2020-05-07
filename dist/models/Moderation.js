@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+// todo: move this to database or something
 exports.ModeratorUserIds = [
     1,
     1335179568,

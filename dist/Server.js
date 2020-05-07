@@ -17,7 +17,7 @@ const Cors_1 = require("./middleware/Cors");
 const rootDir = __dirname;
 let Server = class Server extends common_1.ServerLoader {
     /**
-     * This method let you configure the express middleware required by your application to works.
+     * This method let you configure the express middleware required by your application to work.
      * @returns {Server}
      */
     $beforeRoutesInit() {

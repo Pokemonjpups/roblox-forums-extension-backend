@@ -17,7 +17,6 @@ export class LoggedIn extends _controller {
             // not type safe but YOLO
             res.locals['userId'] = _results.userId;
         }catch(err) {
-            console.log(err);
             throw new this.Unauthorized('LoginRequired');
         }
         // OK
