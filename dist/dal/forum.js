@@ -4,11 +4,29 @@ const _index_1 = require("./_index");
 const model = require("../models/_index");
 exports.allPostsByCategory = [];
 /**
- * I'm not very good with mysql, so I use this.
+ * The general idea with this giant method here is to allow the latest
+ * posts per forum category to be grabbed with Forum.getPosts(). I can't
+ * just do a basic MySQL select due to how the database is structured, so
+ * I've been left with trying to do my own custom thing that works okay.
  *
- * If anyone can think of a more efficient way, please update this.
+ * This method will go through the latest 1000 posts per category, then
+ * grab the latest thread or latest reply to a thread and skip over any
+ * other replies to the same thread (if that makes sense).
+ *
+ * Sadly, there are some downfalls to the way I decided to implement this:
+ *    1. 1000 posts from every non-hidden category must be stored in memory
+ *    2. App startup time is increased drastically. It can take up to a few
+ *    minutes (depending on your servers speed) before Forum.getPosts() will
+ *    start returning results.
+ *    3. It is not possible to paginate past the first 1,000 posts
+ *    4. It does not update instantly, so posts might only show up in the category
+ *    page a few minutes after being created.
+ *    5. It will not work well if you try to load balance the web server.
+ *
+ * I'm not very good with mysql. If anyone can think of a more efficient
+ * way to do this, please update this.
  */
-// wrap in closure prevent global pollution
+// wrap in a closure to prevent global pollution
 (() => {
     const sleep = require('util').promisify(setTimeout);
     const data = new _index_1.default();
