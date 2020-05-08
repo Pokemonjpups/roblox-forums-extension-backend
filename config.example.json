@@ -9,5 +9,6 @@
     "jwt": {
         "login": "",
         "session": ""
-    }
+    },
+    "homePageText": ""
 }
