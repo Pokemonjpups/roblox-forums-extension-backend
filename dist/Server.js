@@ -14,6 +14,7 @@ const methodOverride = require("method-override");
 require("@tsed/swagger"); // import swagger Ts.ED module
 const NotFound_1 = require("./middleware/NotFound");
 const Cors_1 = require("./middleware/Cors");
+const Pagination_1 = require("./middleware/Pagination");
 const rootDir = __dirname;
 let Server = class Server extends common_1.ServerLoader {
     /**
@@ -27,6 +28,7 @@ let Server = class Server extends common_1.ServerLoader {
             .use(cookieParser())
             .use(compress({}))
             .use(Cors_1.RobloxCors)
+            .use(Pagination_1.Pagination)
             .use(methodOverride())
             .use(bodyParser.json())
             .use(bodyParser.urlencoded({

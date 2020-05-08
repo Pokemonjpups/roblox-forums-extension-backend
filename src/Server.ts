@@ -7,6 +7,7 @@ import "@tsed/swagger"; // import swagger Ts.ED module
 
 import {NotFoundMiddleware} from './middleware/NotFound';
 import {RobloxCors} from './middleware/Cors';
+import {Pagination} from './middleware/Pagination';
 
 const rootDir = __dirname;
 
@@ -47,6 +48,7 @@ export class Server extends ServerLoader {
             .use(cookieParser())
             .use(compress({}))
             .use(RobloxCors)
+            .use(Pagination)
             .use(methodOverride())
             .use(bodyParser.json())
             .use(bodyParser.urlencoded({
