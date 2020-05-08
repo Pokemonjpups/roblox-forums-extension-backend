@@ -9,7 +9,8 @@ interface IConfig {
     jwt: {
         login: string;
         session: string;
-    }
+    };
+    homePageText?: string;
 }
 import fs = require('fs');
 import path = require('path');
